@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>birthday protocol</title>
+    <script type="module" crossorigin src="/assets/index-DlXLEa3S.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-D-Ye6kPg.css">
+  </head>
+  <body>
+    <main id="app">
+      <section id="terminal-screen" class="terminal-screen" aria-label="birthday protocol terminal">
+        <div class="terminal-shell">
+          <pre id="terminal-output" class="terminal-output" aria-live="polite"></pre>
+        </div>
+      </section>
+
+      <section id="experience-screen" class="experience-screen" aria-label="birthday scene" hidden>
+        <div id="scene-root" class="scene-root"></div>
+        <div id="webgl-fallback" class="webgl-fallback" hidden>
+          this browser could not start the 3d scene. please try a modern safari or chrome browser.
+        </div>
+
+        <div id="scene-hud" class="scene-hud" hidden>
+          <p id="desktop-instruction" class="instruction">hold space to blow out the candles</p>
+          <button id="touch-blow-button" class="touch-blow-button" type="button">
+            hold to blow out candles
+          </button>
+          <div class="progress-shell" aria-hidden="true">
+            <span id="progress-fill" class="progress-fill"></span>
+          </div>
+        </div>
+
+        <div id="final-overlay" class="final-overlay" hidden>
+          <div class="final-panel">
+            <h1>happy birthday, Anya!!</h1>
+            <p>from Ilia, with best wishes</p>
+            <button id="restart-button" type="button">restart experience</button>
+          </div>
+        </div>
+
+        <div id="interaction-overlay" class="interaction-overlay" hidden>
+          <section id="flowers-panel" class="memory-panel note-panel" aria-label="flowers wish" hidden>
+            <button class="panel-close" type="button" aria-label="close">close</button>
+            <p>Желаю поскорее оказаться в Яндексе</p>
+          </section>
+
+          <section id="letter-panel" class="memory-panel letter-panel" aria-label="birthday letter" hidden>
+            <button class="panel-close" type="button" aria-label="close">close</button>
+            <p>Аня, с днем рождения! Всех благ! Ты сильная, ты со всем справишься! Ты крутая!</p>
+          </section>
+
+          <section id="photos-panel" class="memory-panel photos-panel" aria-label="photo collection" hidden>
+            <button class="panel-close" type="button" aria-label="close">close</button>
+            <div class="polaroid-stack" aria-label="photos">
+              <button class="polaroid-card" type="button" data-photo="/photos/anya-1.png" aria-label="open photo 1">
+                <img src="/photos/anya-1.png" alt="Anya photo 1" />
+              </button>
+              <button class="polaroid-card" type="button" data-photo="/photos/anya-2.png" aria-label="open photo 2">
+                <img src="/photos/anya-2.png" alt="Anya photo 2" />
+              </button>
+              <button class="polaroid-card" type="button" data-photo="/photos/anya-3.png" aria-label="open photo 3">
+                <img src="/photos/anya-3.png" alt="Anya photo 3" />
+              </button>
+            </div>
+          </section>
+
+          <section id="soundtrack-panel" class="memory-panel soundtrack-panel" aria-label="soundtrack" hidden>
+            <button class="panel-close" type="button" aria-label="close">close</button>
+            <p>beauty &amp; a beat</p>
+            <button id="soundtrack-toggle" class="soundtrack-toggle" type="button">play soundtrack</button>
+            <audio id="soundtrack-audio" src="/audio/beauty-and-a-beat.mp3" preload="metadata"></audio>
+          </section>
+        </div>
+
+        <div id="photo-lightbox" class="photo-lightbox" hidden>
+          <button id="photo-lightbox-close" class="panel-close" type="button" aria-label="close photo">close</button>
+          <img id="photo-lightbox-image" alt="selected Anya photo" />
+        </div>
+      </section>
+    </main>
+
+  </body>
+</html>
