@@ -63,6 +63,7 @@
       return 'cleaning';
     }
     // Match the dish before its ingredients.
+    if (/^(шоколад|конфет|батончик)/.test(n)) return 'chocolate';
     if (/пицц/.test(n)) return 'pizza';
     if (/сырник/.test(n)) return 'pancakes';
     if (/фруктовый микс/.test(n)) return 'fruitmix';
