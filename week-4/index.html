@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#235845">
+  <meta name="description" content="Интерактивный анализ доставленных заказов: месячная динамика, расходы, скидки, категории и история цен товаров.">
+  <title>Аналитика покупок · Илья Евсеенко</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%23235845'/%3E%3Cpath d='M10 22h20l-3 10H13zM15 21v-4a5 5 0 0110 0v4' fill='none' stroke='%23fff' stroke-width='2.5'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./styles.css">
+  <script defer src="./vendor/vue.global.prod.js"></script>
+  <script defer src="./vendor/d3.min.js"></script>
+  <script defer src="./illustrations.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+<div id="app" v-cloak>
+  <header class="topbar">
+    <a class="brand" href="#overview" aria-label="К началу дашборда"><span class="brand-icon"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 14h22l-3 13H8zM11 14V9a5 5 0 0110 0v5M12 19v4m8-4v4"/></svg></span><span>Дом и дача<span class="brand-sub">Личная аналитика</span></span></a>
+    <nav aria-label="Навигация"><a href="#overview">Обзор</a><a href="#products">Товары</a><button @click="revealMethod">О данных</button></nav>
+    <div class="author"><span class="avatar">ИЕ</span><span>Илья Евсеенко<small>Неделя 4 · Вариант A</small></span></div>
+  </header>
+  <main v-if="data" id="overview">
+    <section class="page-heading">
+      <div><div class="eyebrow">Заказы, привычки и расходы</div><h1>Аналитика покупок</h1><p>От общей динамики к каждому товару. Только доставленные заказы.</p></div>
+      <div class="data-note"><span class="status-dot"></span><span>Данные по 29 августа 2026<small>Источник: учебный датасет первой недели</small></span></div>
+    </section>
+    <section class="filters" aria-label="Фильтры">
+      <div class="filter-unit"><span class="filter-label">Период анализа</span><div class="segments" role="group" aria-label="Длина периода"><button v-for="p in periods" :key="p.value" :class="{active:period===p.value}" :aria-pressed="period===p.value" @click="period=p.value; closeDetail()">{{p.label}}</button></div></div>
+      <div class="category-control"><span class="filter-label">Категории</span><button class="select-button" :aria-expanded="categoryOpen" aria-controls="category-menu" @click="categoryOpen=!categoryOpen">{{categoryLabel}}<span class="chevron">⌄</span></button><div id="category-menu" class="category-menu" v-if="categoryOpen"><div class="menu-head"><strong>Категории покупок</strong><button @click="selectedCategories=[]">Сбросить</button></div><label v-for="c in data.categories" :key="c"><input type="checkbox" :value="c" v-model="selectedCategories"><span>{{c}}</span></label><button class="apply-button" @click="categoryOpen=false">Готово</button></div></div>
+      <button class="reset" :disabled="period===24 && !selectedCategories.length && !search" @click="reset">Сбросить фильтры</button>
+      <span class="filter-range">{{periodLabel}}</span>
+    </section>
+    <div class="section-caption"><span><strong>Последний месяц в данных</strong> · август 2026</span><span>Динамика за {{months.length}} мес. · август по 29.08 включительно</span></div>
+    <section class="kpi-grid" aria-label="Основные метрики">
+      <article class="kpi-card" v-for="m in metrics" :key="m.key">
+        <div class="kpi-top"><h2>{{m.label}}</h2><span class="metric-symbol" :class="m.key">{{m.symbol}}</span></div>
+        <div class="kpi-value">{{metricFormat(current[m.key],m.key)}}<span>{{m.unit}}</span></div>
+        <div class="kpi-support">{{m.context}}</div>
+        <trend-chart :series="monthly" :metric="m.key" :color="m.color" :label="m.label" :format="m.format"></trend-chart>
+        <div class="kpi-total"><span>За выбранный период</span><strong>{{metricFormat(totals[m.key],m.key)}}{{m.key==='spend'?' ₽':m.key==='discountRate'?' %':''}}</strong></div>
+      </article>
+    </section>
+    <section class="insight" aria-live="polite"><span class="insight-icon">↗</span><p v-if="topProduct"><strong>{{topCategory.name}} — {{pct(topCategory.share)}} расходов за период.</strong> Больше всего на один товар потрачено: {{topProduct.name}} — {{money(topProduct.spend)}}.</p><p v-else>В выбранных категориях нет покупок товаров. Измени фильтр, чтобы увидеть товарный анализ.</p></section>
+    <div class="analysis-grid">
+      <section class="panel product-panel" id="products">
+        <div class="panel-heading"><div><span class="eyebrow">Структура потребления</span><h2>Что покупают чаще и дороже</h2><p>Количество и траты на общей строке. Наведи на товар — увидишь историю цены.</p></div><span class="count-pill">{{products.length}} товаров</span></div>
+        <div class="product-tools"><label class="search"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4"/></svg><input type="search" v-model="search" placeholder="Найти товар" aria-label="Поиск товара"></label><div class="sort"><span>Сортировать</span><button :class="{active:sort==='spend'}" @click="sort='spend'">По тратам</button><button :class="{active:sort==='quantity'}" @click="sort='quantity'">По количеству</button></div></div>
+        <div class="product-table" role="table" aria-label="Товары, количество и траты">
+          <div class="product-row table-head" role="row"><span role="columnheader">Товар</span><span role="columnheader">Количество, ед.</span><span role="columnheader">Траты, ₽</span></div>
+          <div class="product-list" :class="{expanded:limit>10}">
+            <button v-for="(p,i) in visibleProducts" :key="p.id" class="product-row product-data" role="row" @mouseenter="showDetail(p,$event,false)" @mouseleave="scheduleClose" @focus="showDetail(p,$event,false)" @blur="scheduleClose" @click="showDetail(p,$event,true)" :aria-label="p.name+', '+p.quantity+' единиц, '+money(p.spend)+'. Открыть историю цены'">
+              <span class="product-name" role="cell"><span class="rank">{{i+1}}</span><img :src="art(p.name,p.category)" alt="" width="44" height="44"><span><strong>{{p.name}}</strong><small>{{p.category}} · {{p.orders.size}} {{orderWord(p.orders.size)}}</small></span></span>
+              <span class="bar-cell quantity-bar" role="cell"><span class="bar-track"><span :style="{width:(p.quantity/maxQuantity*100)+'%'}"></span></span><strong>{{number(p.quantity)}}</strong></span>
+              <span class="bar-cell spend-bar" role="cell"><span class="bar-track"><span :style="{width:(p.spend/maxSpend*100)+'%'}"></span></span><strong>{{number(p.spend)}}</strong></span>
+            </button>
+          </div>
+          <div class="empty" v-if="!visibleProducts.length"><strong>Товары не найдены</strong><p>Попробуй другое название или убери ограничение по категории.</p><button @click="search=''; selectedCategories=[]">Показать все товары</button></div>
+        </div>
+        <div class="panel-footer"><span>Товаров: {{number(totals.goodsQuantity)}} ед. · {{money(totals.goodsSpend)}}<small>Доставка и упаковка в товарный рейтинг не входят.</small></span><button v-if="products.length>10" @click="limit=limit===10?1000:10">{{limit===10?'Все товары':'Свернуть'}} <span aria-hidden="true">{{limit===10?'↓':'↑'}}</span></button></div>
+      </section>
+      <aside class="panel category-panel">
+        <div class="panel-heading"><div><span class="eyebrow">Распределение бюджета</span><h2>Категории</h2><p>Траты, заказы и средняя скидка за период</p></div></div>
+        <div class="category-summary"><span>Всего потрачено<strong>{{money(totals.spend)}}</strong></span><span>{{number(totals.orders)}}<small>{{orderWord(totals.orders)}}</small></span></div>
+        <div class="category-list"><button v-for="c in categories" :key="c.name" class="category-row" :class="{chosen:selectedCategories.includes(c.name)}" @click="toggleCategory(c.name)" :aria-pressed="selectedCategories.includes(c.name)" :aria-label="'Фильтр: '+c.name">
+          <div class="category-row-title"><strong>{{c.name}}</strong><b>{{money(c.spend)}}</b></div><div class="category-track"><span :style="{width:(c.spend/maxCategory*100)+'%'}"></span></div><div class="category-row-meta"><span>{{pct(c.share)}} трат · {{c.orders}} {{orderWord(c.orders)}}</span><span>Скидка {{pct(c.discountRate)}}</span></div>
+        </button></div>
+        <div class="category-hint">Нажми на категорию, чтобы отфильтровать дашборд. Заказы могут содержать несколько категорий.</div>
+      </aside>
+    </div>
+    <section id="methodology" class="methodology"><button class="method-toggle" :aria-expanded="methodOpen" @click="methodOpen=!methodOpen"><span>Как читать дашборд и считать метрики</span><span>{{methodOpen?'−':'+'}}</span></button><div v-if="methodOpen" class="method-body"><div><h3>Выборка и период</h3><p>Исходный файл: «Неделя 1. Вариант A. Дом и дача». Даты: 05.09.2021–29.08.2026. Включены 944 доставленных заказа, исключены 17 отменённых. По умолчанию показаны 24 календарных месяца: сентябрь 2024 — август 2026. Карточки показывают последний месяц источника; изменение категории пересчитывает все метрики.</p></div><div><h3>Заказы, траты и скидка</h3><p>Заказы — количество уникальных заказов, содержащих выбранные категории. Траты — сумма оплаченных позиций с доставкой и упаковкой. Средняя скидка = сумма (цена до скидки − цена после скидки) × количество / сумма цены до скидки × количество. Скидка взвешена стоимостью, это не среднее процентов по строкам.</p></div><div><h3>Товары и история цены</h3><p>Единица — заказанная товарная единица, включая упаковки; массы не суммируются. Услуги исключены из товарного рейтинга. Цена за месяц — сумма трат на товар / количество. В месяцы без покупок цена неизвестна: линия разрывается. Миниатюры — условные авторские иллюстрации видов товаров, без изображений брендов.</p></div><div><h3>Публичная версия</h3><p>Адреса, исходные номера заказов и точное время не включены. Анонимные группы нужны для точного подсчёта уникальных заказов. Данные фиксированы на дате источника. Ноль на графиках трат и заказов означает отсутствие покупок; отсутствие базы скидки показывается пропуском.</p></div></div></section>
+    <footer class="footer"><span>Илья Евсеенко · Неделя 4 · Вариант A</span><span>Vue 3 + D3 · Данные: первая неделя курса «Визуализация»</span></footer>
+  </main>
+  <div v-else-if="error" class="load-state"><h1>Не удалось загрузить данные</h1><p>{{error}}</p><button @click="reload">Повторить</button></div><div v-else class="load-state">Загружаем данные покупок…</div>
+  <div v-if="detail" class="detail-card" :class="{pinned:detailPinned}" :style="detailStyle" @mouseenter="cancelClose" @mouseleave="scheduleClose" role="dialog" :aria-label="'История цены: '+detail.name" @keydown.esc="closeDetail">
+    <button class="detail-close" @click="closeDetail" aria-label="Закрыть историю цены">×</button><div class="detail-header"><img :src="art(detail.name,detail.category)" width="56" height="56" alt=""><div><span class="eyebrow">{{detail.category}}</span><h3>{{detail.name}}</h3></div></div><div class="detail-metrics"><div><small>Куплено</small><strong>{{number(detail.quantity)}} ед.</strong></div><div><small>Потрачено</small><strong>{{money(detail.spend)}}</strong></div><div><small>Средняя цена</small><strong>{{money(detail.spend/detail.quantity,1)}}</strong></div></div><div class="price-title"><strong>Цена за единицу, ₽</strong><span>{{periodLabel}}</span></div><price-chart :series="priceHistory" :label="detail.name"></price-chart><div class="detail-foot">{{detail.orders.size}} {{orderWord(detail.orders.size)}} · цена взвешена количеством. Пропуски — не покупали.<span>{{detailPinned?'Нажми × или Escape, чтобы закрыть':'Нажми на товар, чтобы закрепить карточку.'}}</span></div>
+  </div>
+</div>
+<noscript>Для интерактивных графиков включите JavaScript в браузере.</noscript>
+</body>
+</html>
