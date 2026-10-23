@@ -31,7 +31,7 @@
   <div class="top-actions"><span id="liveStatus" class="status" role="status">Пересчитано</span><button class="text-button" id="resetButton" type="button" aria-label="Сбросить все параметры">Сбросить ↺</button></div>
 </header>
 <main class="app" id="app" data-mobile-view="results">
-  <div class="intro"><div><p class="eyebrow">Говяжья вырезка · электронный пучок</p><h1>Баланс дозы, качества и выгоды.</h1></div><p class="intro-note">Измените параметры — модель сразу<br>обновит результаты и графики.</p></div>
+  <div class="intro"><div><h1>Баланс дозы, качества и выгоды.</h1></div><p class="intro-note">Измените параметры — модель сразу<br>обновит результаты и графики.</p></div>
   <div class="mobile-switch" role="tablist" aria-label="Рабочая область"><button id="mobileResults" type="button" role="tab" aria-selected="true" aria-controls="results" data-mobile="results">Результаты</button><button id="mobileSettings" type="button" role="tab" aria-selected="false" aria-controls="settings" data-mobile="settings" tabindex="-1">Параметры</button></div>
   <div class="workspace" id="workspace">
   <aside class="settings" id="settings" aria-label="Параметры расчёта">
@@ -80,7 +80,6 @@
     </div>
     <p id="validationMessage" class="validation hidden" role="alert"></p>
     </form>
-    <p class="settings-footer"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M8 7v4m0-7v1"/></svg>Учебная модель. Параметры можно менять.</p>
   </aside>
   <section class="results" id="results" aria-label="Результаты расчёта">
     <div class="result-heading"><h2 id="scenarioTitle">Сценарий при 2,00 кГр</h2><span class="scenario-badge" id="scenarioBadge">Проверить качество</span></div>
@@ -98,7 +97,6 @@
         <button type="button" id="chart-tab-dose" role="tab" aria-selected="true" aria-controls="chart-dose" data-chart="dose">Доза и качество</button>
         <button type="button" id="chart-tab-shelf" role="tab" aria-selected="false" aria-controls="chart-shelf" data-chart="shelf" tabindex="-1">Хранение</button>
         <button type="button" id="chart-tab-profit" role="tab" aria-selected="false" aria-controls="chart-profit" data-chart="profit" tabindex="-1">Экономика</button>
-        <button type="button" id="chart-tab-method" role="tab" aria-selected="false" aria-controls="chart-method" data-chart="method" tabindex="-1">Методика</button>
       </div>
       <div class="chart-content" id="chart-dose" role="tabpanel" aria-labelledby="chart-tab-dose">
         <div class="chart-title"><h3>Где обработка наиболее эффективна</h3><p>Окно H ≥ 95% от максимума</p></div>
@@ -125,20 +123,10 @@
         <div class="cost-breakdown"><div><p>Масса брутто</p><strong id="grossMassLabel">—</strong></div><div><p>Облучение</p><strong id="irradiationCostLabel">—</strong></div><div><p>Допрасходы</p><strong id="extraCostsLabel">—</strong></div></div>
         <p class="economy-note">Прибыль относится к массе мяса, тариф — к брутто. Цена реализации до и после обработки одинакова. При отрицательном результате полоса показывает величину убытка.</p>
       </div>
-      <div class="chart-content" id="chart-method" role="tabpanel" aria-labelledby="chart-tab-method" hidden>
-        <div class="method-grid">
-          <div class="method-item"><h3>01 / Микрофлора</h3><p class="formula">N(D) = N₀ · exp(−αD)</p><p>Доза в формулах измеряется в Гр. D₁₀ = ln(10) / α: <span id="d10Label">—</span>. Рост: ε = 1 сут.⁻¹, δ = 10⁻⁴. Порог Nlim — сценарный.</p></div>
-          <div class="method-item"><h3>02 / Качество</h3><p class="formula">P(D) = 100 − Pc · (1 − exp(−βD))</p><p>Q — геометрическое среднее относительных показателей с нормированными весами. Это не массовая доля белка или жира. Аппроксимация кислотного показателя слабая, R² ≈ 0,13.</p></div>
-          <div class="method-item"><h3>03 / Оптимизация</h3><p class="formula">H(D) = (1 − exp(−αD)) · Q(D)</p><p>Поиск на сетке 0–3 кГр с шагом 0,005 кГр. Окно H ≥ 95% Hmax — критерий модели, не норматив безопасности и не доверительный интервал.</p></div>
-          <div class="method-item"><h3>04 / Экономика</h3><p class="formula">p(T) = 1 − exp(−λT)</p><p>Ожидаемая прибыль на кг: цена реализации × p(T) − закупка − обработка и допрасходы. Время до продажи имеет экспоненциальное распределение.</p></div>
-        </div><p class="method-foot">Модель основана на учебных экспериментальных данных. Реальный режим требует проверки качества, микробиологии и распределения дозы; прогноз не устанавливает срок годности.</p>
-      </div>
     </div>
-    <p class="model-note">Расчётное окно — критерий модели. Срок хранения и прибыль зависят от сценарных параметров.</p>
     </div>
   </section>
   </div>
-  <footer class="footer"><span>Учебный прототип · Вариант 1</span><span>DosePlan / Говяжья вырезка</span></footer>
 </main>
 <noscript><p style="padding:24px">Для интерактивного расчёта включите JavaScript в браузере.</p></noscript>
 <script>
@@ -366,7 +354,6 @@
       element("grossMassLabel").textContent = `${numberFormatter.format(parameters.meatMass + parameters.packagingMass)} кг`;
       element("irradiationCostLabel").textContent = formatMoney(result.treatmentCost);
       element("extraCostsLabel").textContent = formatMoney(parameters.additionalCosts);
-      element("d10Label").textContent = formatKilograys(Math.log(10) / parameters.alpha / 1000);
       element("weightsNote").textContent = `Нормированные веса: белок ${formatPercent(parameters.proteinWeight,0)}, жир ${formatPercent(parameters.fatWeight,0)}, кислотный показатель ${formatPercent(parameters.acidWeight,0)}. Сумма всегда равна 1.`;
       element("doseChartDescription").textContent = `Оптимум ${formatKilograys(result.optimalDoseKilograys)}. Расчётное окно ${formatKilograys(result.minimumDoseKilograys)} — ${formatKilograys(result.maximumDoseKilograys)}. При выбранной дозе качество ${formatPercent(result.selectedQuality)}; H составляет ${formatPercent(result.relativeOptimality)} от максимума.`;
       element("shelfChartDescription").textContent = `Порог ${numberFormatter.format(parameters.contaminationLimit)} КОЕ/г. Прогноз достижения порога без обработки ${formatDays(result.shelfLifeWithoutTreatment)}, после ${formatDays(result.shelfLifeAfterTreatment)}.`;
