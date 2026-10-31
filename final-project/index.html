@@ -35,7 +35,6 @@
 <figure class="panel rates-panel" aria-labelledby="rates-title"><figcaption class="panel-head compact"><h2 id="rates-title">Доля распроданного</h2><label class="compact-select"><span class="sr-only">Сравнить продаваемость по</span><select id="rate-dimension" aria-label="Сравнить продаваемость по"><option value="rooms">Комнатности</option><option value="building">Корпусам</option><option value="floor">Этажам</option><option value="area">Площади</option><option value="view">Виду из окон</option><option value="layout">Планировкам</option></select></label></figcaption><div class="bar-list" id="rates" aria-label="Продаваемость групп"></div><p class="panel-note">Шкала 0-100%. В подписи: продано / весь фонд. Клик по строке фильтрует ЖК.</p></figure>
 <figure class="panel managers-panel" aria-labelledby="managers-title"><figcaption class="panel-head compact"><h2 id="managers-title">Результаты менеджеров</h2><label class="compact-select"><span class="sr-only">Показатель менеджеров</span><select id="manager-mode" aria-label="Показатель менеджеров"><option value="revenue">Выручка</option><option value="count">Сделки</option><option value="discountRate">Скидка, %</option></select></label></figcaption><div class="bar-list manager-list" id="managers" aria-label="Результаты менеджеров"></div><p class="panel-note" id="manager-note">Клик выделяет сделки менеджера. Фонд и общая распроданность сохраняются.</p></figure>
 </aside></div>
-<section class="findings" aria-labelledby="findings-title"><div class="findings-top"><h2 id="findings-title" tabindex="-1">Где проверить цену и продвижение</h2><span id="findings-date"></span></div><div id="findings-content"></div></section>
 <footer>Источник: Продажи ЖК, март-сентябрь 2026.xlsx</footer>
 </main>
 <div id="tooltip" role="tooltip" hidden></div>
@@ -430,21 +429,6 @@
     if(!a.length)root.innerHTML='<p class="bar-empty">К выбранной дате продаж в этой группе нет.</p>';
     $('manager-note').textContent=mode==='discountRate'?'Скидки / стоимость до скидок. Меньшая скидка сама по себе не доказывает эффективность.':'Клик выделяет сделки менеджера. Фонд и общая распроданность сохраняются.';
   }
-  function updateFindings(){
-    if(state.cutoff!==M.defaultCutoff){
-      $('findings-date').textContent='Ранний срез на '+date(state.cutoff);
-      $('findings-content').innerHTML='<p>Адресные рекомендации К3 и К5 рассчитаны по итогам 30.09.2026. На раннем срезе они не применяются, чтобы не использовать будущие результаты продаж. Текущие продажи и остаток можно исследовать на четырёх графиках выше.</p><div class="preset-row"><button class="preset" type="button" id="show-final-findings">Перейти к итогам 30.09.2026</button></div>';
-      $('show-final-findings').addEventListener('click',()=>{state.cutoff=M.defaultCutoff;update();$('findings-title').focus({preventScroll:true});});
-      return;
-    }
-    const s={cutoff:state.cutoff},k3two=records.filter(d=>d.building==='К3'&&d.rooms===2),k3one=records.filter(d=>d.building==='К3'&&d.rooms===1),k5bad=records.filter(d=>d.building==='К5'&&d.rooms===2&&Math.abs(d.area-101.4)<.01),k5good=records.filter(d=>d.building==='К5'&&d.rooms===2&&Math.abs(d.area-83.3)<.01),sold=a=>a.filter(d=>M.isSold(d,s.cutoff)).length;
-    $('findings-date').textContent='По всему ЖК на '+date(state.cutoff);
-    $('findings-content').innerHTML=`<p><strong>К3:</strong> двушки ${sold(k3two)} / ${k3two.length} продано, однушки ${sold(k3one)} / ${k3one.length}. <strong>К5:</strong> двушки 101,4 м² ${sold(k5bad)} / ${k5bad.length}, а 83,3 м² ${sold(k5good)} / ${k5good.length}. Проверить конкретные предложения, цену, планировки и показы; данные не доказывают, что скидка решит проблему.</p><div class="preset-row"><button class="preset" type="button" data-preset="k3">Показать двушки К3</button><button class="preset" type="button" data-preset="k5">Показать двушки К5 от 100 м²</button><button class="text-btn" type="button" id="show-priority">Список квартир для проверки</button></div>`;
-    $('findings-content').querySelector('[data-preset="k3"]').addEventListener('click',()=>applyPreset('К3',null));
-    $('findings-content').querySelector('[data-preset="k5"]').addEventListener('click',()=>applyPreset('К5','100-119'));
-    $('show-priority').addEventListener('click',event=>openPriority(event.currentTarget,[...k3two,...k5bad].filter(d=>!M.isSold(d,state.cutoff))));
-  }
-  function applyPreset(building,area){for(const key of M.dimensions)state[key]=null;state.building=building;state.rooms='2';state.area=area;state.manager=null;update();$('inventory-title').focus({preventScroll:true});$('inventory-title').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});}
   function captureFilterFocus(){
     const active=document.activeElement;
     for(const [kind,selector,key]of [['week','.week-bar','week'],['rate','.rate-row','group'],['manager','.manager-row','manager']]){
@@ -466,7 +450,7 @@
   }
   function update(){
     const focus=captureFilterFocus();
-    hideTip();const t=M.totals(records,state);updateTop(t);updateInventory(t);renderWeeks(t);renderRates();renderManagers();updateFindings();restoreFilterFocus(focus);
+    hideTip();const t=M.totals(records,state);updateTop(t);updateInventory(t);renderWeeks(t);renderRates();renderManagers();restoreFilterFocus(focus);
     document.title='Как продаются квартиры в ЖК'+(state.building?' | '+state.building:'');
   }
   function section(title,pairs){return `<section class="deal-section"><h3>${esc(title)}</h3><dl>${pairs.map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl></section>`;}
@@ -478,11 +462,6 @@
     $('apartment-content').querySelector('.dialog-actions').append(layoutButton);
     layoutButton.addEventListener('click',()=>{$('apartment-dialog').close();state.layout=d.layout;modes.rate='layout';$('rate-dimension').value='layout';update();});
     $('filter-this-building').addEventListener('click',()=>{$('apartment-dialog').close();state.building=d.building;update();});$('filter-this-type').addEventListener('click',()=>{$('apartment-dialog').close();state.rooms=String(d.rooms);update();});$('apartment-dialog').showModal();
-  }
-  function openPriority(source,list){
-    openSource=source;selectedApartment=null;$('apartment-title').textContent='Адресный список для проверки';
-    $('apartment-content').innerHTML=`<p class="dialog-note">${list.length} квартир без продажи к ${date(state.cutoff)} из двух проблемных групп. Это очередь для проверки предложения, а не доказательство необходимости скидки.</p><div class="deal-section">${list.map(d=>`<p style="margin:0 0 8px"><button class="text-btn priority-apartment" data-id="${esc(d.apartment)}">${esc(d.apartment)}</button> · ${d.floor} этаж · ${fmt(d.area,1)} м²</p>`).join('')||'<p>Все квартиры этих групп уже проданы.</p>'}</div>`;
-    $('apartment-content').querySelectorAll('.priority-apartment').forEach(b=>b.addEventListener('click',()=>{$('apartment-dialog').close();openApartment(byApartment.get(b.dataset.id),source);}));$('apartment-dialog').showModal();
   }
   for(const key of ['building','rooms','floor','area'])$(key).addEventListener('change',event=>{state[key]=event.target.value||null;update();});
   $('cutoff').addEventListener('change',event=>{const v=event.target.value;if(!v||v<'2026-03-01'||v>M.defaultCutoff){$('cutoff').value=state.cutoff;return;}state.cutoff=v;update();});
